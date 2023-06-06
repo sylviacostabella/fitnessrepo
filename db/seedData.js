@@ -1,16 +1,68 @@
 // require in the database adapter functions as you write them (createUser, createActivity...)
-const { } = require('./');
-const client = require("./client")
+// const { } = require('./');
+const client = require("./client");
+
+const {
+  getAllActivities,
+  createActivity,
+  addActivityToRoutine,
+  getRoutinesWithoutActivities,
+  createRoutine,
+  createUser,
+} = require("./");
 
 async function dropTables() {
-  console.log("Dropping All Tables...")
-  // drop all tables, in the correct order
+  console.log("Dropping All Tables...");
+  try {
+    await client.query(`DROP TABLE IF EXISTS routineActivities;
+    DROP TABLE IF EXISTS routines; 
+    DROP TABLE IF EXISTS activities;
+    DROP TABLE IF EXISTS users;
+    `);
+  } catch (error) {
+    console.log("Error occured while dropping tables");
+    throw error;
+  }
 }
 
 async function createTables() {
-  console.log("Starting to build tables...")
-  // create all tables, in the correct order
+  console.log("Starting to build tables...");
+  try {
+    await client.query(`
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL, 
+      password VARCHAR(255) NOT NULL);
+
+      CREATE TABLE activities (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL, 
+        description TEXT NOT NULL);  
+
+        CREATE TABLE routines (
+          id SERIAL PRIMARY KEY,
+          "creatorId" INTEGER REFERENCES users(id), 
+          "isPublic" BOOLEAN DEFAULT false, 
+          name VARCHAR(255) UNIQUE NOT NULL,
+          username VARCHAR(255) UNIQUE NOT NULL, 
+          goal TEXT NOT NULL
+          );  
+
+          CREATE TABLE routineActivities (
+            id SERIAL PRIMARY KEY,
+            "routineId" INTEGER REFERENCES routines(id), 
+            "activityId" INTEGER REFERENCES activities(id), 
+            duration INTEGER,
+            UNIQUE ("routineId", "activityId")
+            );  
+    `);
+  } catch (error) {
+    console.log("Error occured while creating tables");
+    throw error;
+  }
 }
+
+
 
 /* 
 
@@ -21,7 +73,7 @@ DO NOT CHANGE ANYTHING BELOW. This is default seed data, and will help you start
 async function createInitialUsers() {
   try {
     console.log("Starting to create users...")
-    
+
     const usersToCreate = [
       { username: "albert", password: "bertie99" },
       { username: "sandra", password: "sandra123" },
