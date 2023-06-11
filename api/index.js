@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 // GET /api/health
-router.get("/health", async (req, res, next) => {});
+router.get("/health", async (req, res, next) => {
+  res.status(200).json({ message: "healthy" });
+  next();
+});
 
 // ROUTER: /api/users
 const usersRouter = require("./users");
@@ -19,6 +22,11 @@ router.use("/routines", routinesRouter);
 // ROUTER: /api/routine_activities
 const routineActivitiesRouter = require("./routineActivities");
 router.use("/routine_activities", routineActivitiesRouter);
+
+// Catch-all route
+router.all('*', (req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 module.exports = {
   router,

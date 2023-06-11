@@ -42,7 +42,6 @@ routineRouter.patch("/:routineActivityId", requireUser, async (req, res) => {
 routineRouter.delete("/:routineActivityId", requireUser, async (req, res) => {
   const { routineActivityId } = req.params;
   console.log(routineActivityId);
-  const fields = req.body;
 
   const canEdit = await canEditRoutineActivity(routineActivityId, req.user.id);
 
@@ -50,13 +49,15 @@ routineRouter.delete("/:routineActivityId", requireUser, async (req, res) => {
 
   const getRoutineName = await getRoutineById(getName.routineId);
 
+  console.log({ canEdit, getName, getRoutineName })
+
   let error = {
     error: "error",
     message: `User ${req.user.username} is not allowed to delete ${getRoutineName.name}`,
     name: "user error",
   };
 
-  if (canEdit === true) {
+  if (canEdit) {
     const update = await destroyRoutineActivity(routineActivityId);
     res.send(update);
   } else {

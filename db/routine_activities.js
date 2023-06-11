@@ -7,7 +7,6 @@ async function getRoutineActivityById(id) {
     SELECT * FROM routine_activities WHERE id = $1; `,
       [id]
     );
-    // console.log(result.rows[0]);
     return result.rows[0];
   } catch (error) {
     console.log("Error with getRoutineActivityById");
@@ -29,7 +28,6 @@ async function addActivityToRoutine({
   RETURNING *; `,
       [routineId, activityId, duration, count]
     );
-    // console.log(result.rows[0]);
     return result.rows[0];
   } catch (error) {
     console.log("error with addactivitytoroutine");
@@ -45,8 +43,7 @@ async function getRoutineActivitiesByRoutine({ id }) {
     WHERE "routineId" = $1;`,
       [id]
     );
-    // console.log(routineByRoutine.rows);
-    // console.log(result.rows);
+  
     return result.rows;
   } catch (error) {
     console.log("error with getRoutineActivitiesByRoutine");
@@ -59,7 +56,6 @@ async function updateRoutineActivity({ id, ...fields }) {
     .map((key, index) => `"${key}"=$${index + 1}`)
     .join(", ");
 
-  // console.log(setString);
   if (setString.length > 0) {
     const update = await client.query(
       `
@@ -70,7 +66,6 @@ async function updateRoutineActivity({ id, ...fields }) {
     `,
       Object.values(fields)
     );
-    // console.log(update.rows[0]);
     return update.rows[0];
   }
 }
@@ -84,13 +79,14 @@ async function destroyRoutineActivity(id) {
     RETURNING *;`,
       [id]
     );
-    // console.log(result.rows[0]);
     return result.rows[0];
   } catch (error) {
     console.log("error with destroyRoutineActivity");
     throw error;
   }
 }
+
+
 
 async function canEditRoutineActivity(routineActivityId, userId) {
   try {
@@ -100,8 +96,7 @@ async function canEditRoutineActivity(routineActivityId, userId) {
   WHERE "activityId" = $1;`,
       [routineActivityId]
     );
-    // console.log(result.rows[0].routineId);
-    // this will give u straight number of routine id from ^^ code
+   
 
     const check = await client.query(
       `
@@ -109,7 +104,6 @@ async function canEditRoutineActivity(routineActivityId, userId) {
   WHERE id = $1;`,
       [result.rows[0].routineId]
     );
-    // console.log(check.rows[0].creatorId);
 
     if (check.rows[0].creatorId === userId) {
       return true;

@@ -3,7 +3,7 @@ const {
   getUserByUsername,
   createUser,
   getUserById,
-  getPublicRoutinesByUser,
+  getAllRoutinesByUser,
 } = require("../db");
 const usersRouter = express.Router();
 const jwt = require("jsonwebtoken");
@@ -53,13 +53,7 @@ usersRouter.post("/login", async (req, res, next) => {
 usersRouter.post("/register", async (req, res, next) => {
   const { username, password } = req.body;
   try {
-    if (password.length < 8) {
-      res.status(500).send({
-        error: "an error has occured password too short",
-        message: "Password Too Short!",
-        name: "passsworderror",
-      });
-    }
+
     const checkUsers = await getUserByUsername(username);
     if (checkUsers) {
       res.status(500).send({
@@ -74,7 +68,7 @@ usersRouter.post("/register", async (req, res, next) => {
           id: user.id,
           username,
         },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || "neverTell",
         {
           expiresIn: "1w",
         }
@@ -88,19 +82,24 @@ usersRouter.post("/register", async (req, res, next) => {
   }
 });
 
-// GET /api/users/me
 usersRouter.get("/me", requireUser, async (req, res) => {
-  // console.log(req.user);
-  const result = await getUserById(req.user.id);
-  res.send(result);
+  if (req.user) {
+    const result = await getUserById(req.user.id);
+    res.send(result);
+  } else {
+    res.status(401).send({
+      name: 'UnauthorizedError',
+      error: 'UnauthorizedError',
+      message: 'You must be logged in to perform this action'
+    })
+  }
 });
 
-// GET /api/users/:username/routines
 usersRouter.get("/:username/routines", async (req, res) => {
   const { username } = req.params;
   console.log(username);
 
-  const userRoutines = await getPublicRoutinesByUser({ username });
+  const userRoutines = await getAllRoutinesByUser({ username });
   console.log(userRoutines);
   res.send(userRoutines);
 });

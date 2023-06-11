@@ -5,28 +5,40 @@ const {
   createActivity,
   updateActivity,
   getActivityByName,
+  getActivityById,
+  getPublicRoutinesByActivity,
 } = require("../db");
 const { requireUser } = require("./utils");
 
 // GET /api/activities/:activityId/routines
+activityRouter.get("/:activityId/routines", async (req, res) => {
+  try {
+    const activity = await getActivityById(req.params.activityId);
+    if (activity) {
+      const routines = await getPublicRoutinesByActivity(activity);
+      res.send(routines);
+    } else {
+      res.status(404).send({
+        name: "ActivityNotFoundError",
+        error: "ActivityNotFoundError",
+        message: `Activity ${req.params.activityId} not found`,
+      });
+    }
+  } catch (error) {
+    console.log("Error with getting activities");
+    res.status(500).send({
+      name: "InternalServerError",
+      error: "InternalServerError",
+      message: error.message,
+    });
+  }
+});
 
 // GET /api/activities
 activityRouter.get("/", async (req, res) => {
   try {
     const allActivities = await getAllActivities();
-    const activities = allActivities.filter((activity) => {
-      if (activity.active) {
-        return true;
-      }
-      if (req.user === req.user.id) {
-        return true;
-      }
-      return false;
-    });
-
-    res.send({
-      activities,
-    });
+    res.send(allActivities);
   } catch (error) {
     console.log("Error with getting activities");
     throw error;
@@ -44,13 +56,24 @@ activityRouter.post("/", requireUser, async (req, res, next) => {
     description: description,
   };
 
+  let error = {
+    error: "error",
+    message: `An activity with name ${name} already exists`,
+    name: "error name",
+  };
+
   try {
-    // add authorId, title, content to postData object
-    const activity = await createActivity(activityData);
-    // this will create the post and the tags for us
-    // if the post comes back, res.send({ post });
-    res.send({ activity });
-    // otherwise, next an appropriate error object
+    const check = await getActivityByName(name);
+    if (check) {
+      res.send(error);
+    } else {
+      // add authorId, title, content to postData object
+      const activity = await createActivity(activityData);
+      // this will create the post and the tags for us
+      // if the post comes back, res.send({ post });
+      res.send(activity);
+      // otherwise, next an appropriate error object
+    }
   } catch ({ name, description }) {
     next({ name, description });
   }
@@ -66,20 +89,19 @@ activityRouter.patch("/:activityId", requireUser, async (req, res) => {
     name: "error name",
   };
   const check = await getActivityByName(fields.name);
-
-  const activityToUpdate = await updateActivity({ id, ...fields });
-  if (!activityToUpdate) {
-    res.status(500);
-    res.send({
-      error: "an error has occurred",
-      message: `Activity ${id} not found`,
-      name: "noExistingActivityId",
-    });
-    return;
-  }
   if (check) {
     res.send(error);
   } else {
+    const activityToUpdate = await updateActivity({ id, ...fields });
+    if (!activityToUpdate) {
+      res.status(500);
+      res.send({
+        error: "an error has occurred",
+        message: `Activity ${id} not found`,
+        name: "noExistingActivityId",
+      });
+      return;
+    }
     res.send(activityToUpdate);
   }
 });

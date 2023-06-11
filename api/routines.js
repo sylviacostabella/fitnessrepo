@@ -17,19 +17,7 @@ const { requireUser } = require("./utils");
 routinesRouter.get("/", async (req, res) => {
   try {
     const allRoutines = await getAllPublicRoutines();
-    const routines = allRoutines.filter((routine) => {
-      if (routine.active) {
-        return true;
-      }
-      if (req.user === req.user.id) {
-        return true;
-      }
-      return false;
-    });
-
-    res.send({
-      routines,
-    });
+    res.send(allRoutines);
   } catch (error) {
     console.log("Error with getting all public routines");
     throw error;
@@ -40,29 +28,43 @@ routinesRouter.get("/", async (req, res) => {
 routinesRouter.post("/", requireUser, async (req, res) => {
   const fields = req.body;
 
-  const create = await createRoutine({ creatorId: req.user.id, ...fields });
-
-  res.send(create);
+  if (req.user) {
+    const create = await createRoutine({ creatorId: req.user.id, ...fields });
+    res.send(create);
+  } else {
+    res.send({
+      name: 'UnauthorizedError',
+      error: 'UnauthorizedError',
+      message: 'You must be logged in to perform this action'
+    })
+  }
 });
 
 // PATCH /api/routines/:routineId
 routinesRouter.patch("/:routineId", requireUser, async (req, res) => {
   const { routineId } = req.params;
   const fields = req.body;
-  const check = await getRoutineById(routineId);
 
-  let error = {
-    error: "Error",
-    message: `User ${req.user.username} is not allowed to update ${check.name}`,
-    name: "Name error",
-  };
-
-  if (check.creatorId !== req.user.id) {
-    res.status(403);
-    res.send(error);
-  } else {
-    const update = await updateRoutine({ id: routineId, ...fields });
-    res.send(update);
+  if (req.user) {
+    const check = await getRoutineById(routineId);
+    if (check.creatorId !== req.user.id) {
+      res.status(403);
+      res.send({
+        error: "Error",
+        message: `User ${req.user.username} is not allowed to update ${check.name}`,
+        name: "Name error",
+      });
+    } else {
+      const update = await updateRoutine({ id: routineId, ...fields });
+      res.send(update);
+    }
+  }
+  else {
+    res.send({
+      name: 'UnauthorizedError',
+      error: 'UnauthorizedError',
+      message: 'You must be logged in to perform this action'
+    })
   }
 });
 

@@ -6,7 +6,7 @@ async function getRoutineById(id) {
     const {
       rows: [routine],
     } = await client.query(
-      ` SELECT * FROM users WHERE routine.id=$1;
+      ` SELECT * FROM routines WHERE id=$1;
     `,
       [id]
     );
@@ -44,7 +44,7 @@ async function getAllRoutines() {
       SELECT activities.*, routine_activities.duration, routine_activities.count, routine_activities. "routineId",
       routine_activities.id AS "routineActivityId"
       FROM activities
-      JOIN routine_activities ON "activitiyId"=activities.id
+      JOIN routine_activities ON "activityId"=activities.id
       WHERE routine_activities."routineId"=$1;
       `,
         [routine.id]
@@ -71,10 +71,10 @@ async function getAllRoutinesByUser({ username }) {
     for (let routine of routines) {
       const { rows: activities } = await client.query(
         ` 
-        SELECT activities.*, routine_activities.duration, routine_activites.count, routine_activites."routineID",
+        SELECT activities.*, routine_activities.duration, routine_activities.count, routine_activities."routineId",
         routine_activities.id AS "routineActivityId"
         FROM activities
-        JOIN routine_activities ON "activityId"=activities.id
+        JOIN routine_activities ON activities.id=routine_activities."activityId"
         WHERE routine_activities."routineId"=$1;
         `,
         [routine.id]
