@@ -13,14 +13,17 @@ const {
 
 async function dropTables() {
   console.log("Dropping All Tables...");
+  // Update the routine activities for this query.
   try {
-    await client.query(`DROP TABLE IF EXISTS routineActivities;
+    await client.query(`DROP TABLE IF EXISTS routine_activities;
     DROP TABLE IF EXISTS routines; 
     DROP TABLE IF EXISTS activities;
     DROP TABLE IF EXISTS users;
     `);
+    console.log("Dropped tables completed.")
   } catch (error) {
-    console.log("Error occured while dropping tables");
+    console.log("Error occured while dropping tables", error);
+    
     throw error;
   }
 }
@@ -29,35 +32,36 @@ async function createTables() {
   console.log("Starting to build tables...");
   try {
     await client.query(`
-    CREATE TABLE users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(255) UNIQUE NOT NULL, 
-      password VARCHAR(255) NOT NULL);
-
-      CREATE TABLE activities (
+      CREATE TABLE users (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) UNIQUE NOT NULL, 
-        description TEXT NOT NULL);  
+        username VARCHAR(255) UNIQUE NOT NULL, 
+        password VARCHAR(255) NOT NULL);
 
-        CREATE TABLE routines (
+        CREATE TABLE activities (
           id SERIAL PRIMARY KEY,
-          "creatorId" INTEGER REFERENCES users(id), 
-          "isPublic" BOOLEAN DEFAULT false, 
-          name VARCHAR(255) UNIQUE NOT NULL,
-          username VARCHAR(255) UNIQUE NOT NULL, 
-          goal TEXT NOT NULL
-          );  
+          name VARCHAR(255) UNIQUE NOT NULL, 
+          description TEXT NOT NULL);  
 
-          CREATE TABLE routineActivities (
+          CREATE TABLE routines (
             id SERIAL PRIMARY KEY,
-            "routineId" INTEGER REFERENCES routines(id), 
-            "activityId" INTEGER REFERENCES activities(id), 
-            duration INTEGER,
-            UNIQUE ("routineId", "activityId")
+            "creatorId" INTEGER REFERENCES users(id), 
+            "isPublic" BOOLEAN DEFAULT false, 
+            name VARCHAR(255) UNIQUE NOT NULL,             
+            goal TEXT NOT NULL
             );  
-    `);
+
+            CREATE TABLE routine_activities (
+              id SERIAL PRIMARY KEY,
+              "routineId" INTEGER REFERENCES routines(id), 
+              "activityId" INTEGER REFERENCES activities(id), 
+              duration INTEGER,
+              count INTEGER,
+              UNIQUE ("routineId", "activityId")
+              );  
+      `);
+    console.log("Created tables.")
   } catch (error) {
-    console.log("Error occured while creating tables");
+    console.log("Error occured while creating tables", error);
     throw error;
   }
 }

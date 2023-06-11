@@ -1,16 +1,12 @@
 
-const { Client } = require("pg");
+//"Pool" is specific for Postgres
+const { Pool } = require('pg');
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "https://localhost:5432/fitness-dev";
+const connectionString = process.env.DATABASE_URL || 'https://localhost:5432/fitness-dev';
 
-const client = new Client({
+const client = new Pool({
   connectionString,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : undefined,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
 });
 
 module.exports = client;

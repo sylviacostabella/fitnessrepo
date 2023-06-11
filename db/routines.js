@@ -156,7 +156,7 @@ async function createRoutine({ creatorId, isPublic, name, goal }) {
     );
     return result.rows[0];
   } catch (error) {
-    console.log(error);
+    console.log("Error creating routine.",error);
   }
 }
 
